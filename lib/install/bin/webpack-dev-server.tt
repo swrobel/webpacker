@@ -16,12 +16,18 @@ CONFIG_FILE       = File.join(APP_PATH, "config/webpacker.yml")
 NODE_MODULES_PATH = File.join(APP_PATH, "node_modules")
 WEBPACK_CONFIG    = File.join(APP_PATH, "config/webpack/#{NODE_ENV}.js")
 
-LISTEN_HOST_ADDR = NODE_ENV == 'development' ? 'localhost' : '0.0.0.0'
-
 def args(key)
   index = ARGV.index(key)
   index ? ARGV[index + 1] : nil
 end
+
+LISTEN_HOST_ADDR = if args('--listen-host')
+    args('--listen-host')
+  elsif NODE_ENV == 'development'
+    'localhost'
+  else
+    '0.0.0.0'
+  end
 
 begin
   dev_server = YAML.load_file(CONFIG_FILE)[RAILS_ENV]["dev_server"]
@@ -47,8 +53,9 @@ rescue Errno::EADDRINUSE
 end
 
 # Delete supplied host and port CLI arguments
-["--host", "--port"].each do |arg|
+["--host", "--port", "--listen-host"].each do |arg|
   ARGV.delete(args(arg))
+  ARGV.delete(arg)
   ARGV.delete(arg)
 end
 
